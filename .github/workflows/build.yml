@@ -1,44 +1,40 @@
-name: Obfuscate and Commit
+name: Build and Deploy Worker
 
 on:
   push:
     branches:
-      - main
+      - dev
 
 permissions:
   contents: write
 
 jobs:
-  obfuscate:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "latest"
 
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      - run: |
-        javascript-obfuscator src/worker.js --output _worker.js \
-          --compact true \
-          --control-flow-flattening true \
-          --control-flow-flattening-threshold 1 \
-          --dead-code-injection true \
-          --dead-code-injection-threshold 1 \
-          --identifier-names-generator hexadecimal \
-          --rename-globals true \
-          --string-array true \
-          --string-array-encoding 'rc4' \
-          --string-array-threshold 1 \
-          --transform-object-keys true \
-          --unicode-escape-sequence true
+      - name: Build project
+        run: |
+          npx wrangler deploy src/worker.js --name bpb-worker-panel --compatibility-flag [nodejs_compat] --compatibility-date 2024-10-26 --dry-run --outdir=dist
+          npx javascript-obfuscator --split-strings true --split-strings-chunk-length 2 dist/worker.js --output _worker.js
 
-      - run: |
-        git config --local user.name "github-actions[bot]"
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git add _worker.js
-        git commit -m "Obfuscate _worker.js" 
-        git push
+      - name: Commit and push built worker
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add _worker.js
+          git commit -m "Automated build: update _worker.js"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
