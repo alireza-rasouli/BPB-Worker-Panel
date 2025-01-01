@@ -3,7 +3,7 @@ name: Build and Deploy Worker
 on:
   push:
     branches:
-      - main
+      - main 
 
 permissions:
   contents: write
@@ -13,30 +13,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "latest"
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
 
-      - name: Install obfuscator (if not already installed)
-        run: |
-          if [ ! -x "$(command -v javascript-obfuscator)" ]; then
-            npm install -g javascript-obfuscator
-          fi
+      - run: |
+        if [ ! -x "$(command -v javascript-obfuscator)" ]; then
+          npm install -g javascript-obfuscator
+        fi
 
-      - name: Build project
-        run: |
-          npx wrangler deploy src/worker.js --name bpb-worker-panel --compatibility-flag [nodejs_compat] --compatibility-date 2024-10-26 --dry-run --outdir=dist
+      - run: |
+        npx wrangler deploy src/worker.js --name bpb-worker-panel --compatibility-flag [nodejs_compat] --compatibility-date 2024-10-26 --dry-run --outdir=dist
 
-      - name: Obfuscate code
-        run: |
-          javascript-obfuscator dist/worker.js --output _worker.js \
+      - run: |
+        javascript-obfuscator dist/worker.js --output _worker.js \
           --compact true \
           --control-flow-flattening true \
           --control-flow-flattening-threshold 1 \
@@ -50,12 +44,9 @@ jobs:
           --transform-object-keys true \
           --unicode-escape-sequence true
 
-      - name: Commit and push built worker (consider excluding _worker.js)
-        run: |
-          git config --global user.name "github-actions[bot]" -f
-          git config --global user.email "github-actions[bot]@users.noreply.github.com" -f
-          git add dist/*  # Add only built files from the output directory
-          git commit -m "Automated build: update built worker files"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add dist/*
+        git commit -m "Automated build: update built worker files"
+        git push
