@@ -52,8 +52,8 @@ jobs:
 
       - name: Commit and push built worker (consider excluding _worker.js)
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]" -f
+          git config --global user.email "github-actions[bot]@users.noreply.github.com" -f
           git add dist/*  # Add only built files from the output directory
           git commit -m "Automated build: update built worker files"
           git push
