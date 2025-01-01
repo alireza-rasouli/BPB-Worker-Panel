@@ -1,15 +1,15 @@
-name: Build and Deploy Worker
+name: Obfuscate and Commit
 
 on:
   push:
     branches:
-      - main 
+      - main
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  obfuscate:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +22,7 @@ jobs:
       - run: npm install
 
       - run: |
-        if ! command -v javascript-obfuscator &> /dev/null; then
-          npm install -g javascript-obfuscator
-        fi
-
-      - run: |
-        npx wrangler deploy src/worker.js --name bpb-worker-panel --compatibility-flag [nodejs_compat] --compatibility-date 2024-10-26 --dry-run --outdir=dist
-
-      - run: |
-        javascript-obfuscator dist/worker.js --output _worker.js \
+        javascript-obfuscator src/worker.js --output _worker.js \
           --compact true \
           --control-flow-flattening true \
           --control-flow-flattening-threshold 1 \
@@ -47,4 +39,6 @@ jobs:
       - run: |
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git add
+        git add _worker.js
+        git commit -m "Obfuscate _worker.js" 
+        git push
